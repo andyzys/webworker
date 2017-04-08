@@ -1,0 +1,363 @@
+ <!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head><meta http-equiv=Content-Type content='text/html; charset=utf-8'>
+
+    <meta name="viewport" content="width=device-width">
+	<title高效复制</title>
+	<script src="./lib/babylon.js"></script>
+    <script src="./lib/zepto.js"></script>
+    <script src="./lib/timer.js"></script>
+
+	<style>
+		html, body {
+			width: 100%;
+			height: 100%;
+			padding: 0;
+			margin: 0;
+			overflow: hidden;
+		}
+
+		#renderCanvas {
+			width: 100%;
+			height: 100%;
+		}
+
+		#infos {
+			position: absolute;
+			right: calc(50% - 150px);
+			top: 1px;
+			height: 110px;
+			width: 300px;
+			border: 1px solid black;
+			color: white;
+			background: rgba(0, 0, 0, 0.5);
+			font-family: "Segoe WP", Arial;
+			font-size: 40px;
+			text-align: center;
+		}
+
+		#simd {
+			position: absolute;
+			right: 215px;
+			top: 120px;
+			color: white;
+			font-family: "Segoe WP", Arial;
+		}
+	</style>
+
+</head>
+<body>
+	<canvas id="renderCanvas"></canvas>
+	<div id="infos"></div>
+
+	<script>
+    var allPos;//所有位置
+    var allKeyPos;//关键帧位置
+    var keyPosRotate;//关键帧转向数据
+    var countOfKeyFrame = 0;//关键帧数
+    var countOfTotalFrame = 0;//总帧数
+    var ActorNum = 21;//总演员数
+    var manActorNum = parseInt(ActorNum / 2) + ActorNum % 2;//男演员个数:保证偶数个是男演员
+    var womanActorNum = ActorNum - manActorNum;//女演员个数
+    //存储所有演员对象
+    var woman, man, manClones = [], womanClones = [];
+
+// 定时器
+    var changePosTimer;//负责改变演员位置定时器
+    var changeRotateTimer;//负责改变演员转向
+    const TimeOfChangePos = 100;
+    const TimeOfChangeRotate = 6000;
+    const TimeOfAdjustRotate = 6000;
+    const CountOfRotatePerFrame = TimeOfChangeRotate / TimeOfChangePos;//每改变位置50次旋转一个角度
+// 初始旋转角度
+    // const InitialRotateAngle = 30;
+    const InitialRotateAngle = 30;
+
+    // 从文件中加载位置信息
+    (function loadPath() {
+        // $.getJSON('keyPosRotatePath(一个人5+1).json', function(data) {
+        // $.getJSON('keyPosRotatePath(test 5人 5 3).json', function(data) {
+        $.getJSON('keyPosRotatePath(2).json', function(data) {
+            keyPosRotate = data;
+            countOfKeyFrame = data.length;
+        });
+        // $.getJSON('allPosPath(一个人5+1).json', function(data) {
+        // $.getJSON('allPosPath(test 5人 5 3).json', function(data) {
+        $.getJSON('allPosPath(2).json', function(data) {
+            allPos = data;
+            countOfTotalFrame = data.length;
+            // 由于里面每一帧没有设置成包裹对象，所以不是数组，所以没有length属性
+            // actorNum_src = ActorNum;
+        });
+    })();
+
+// 导入模型相关
+		var fps = document.getElementById('infos');
+
+		var canvas = document.getElementById("renderCanvas");
+		var engine = new BABYLON.Engine(canvas, false);
+		var scene = createScene(engine);
+
+    // scene background color
+    scene.clearColor = new BABYLON.Color3(127/255, 185/255, 242/255);
+    scene.activeCamera.attachControl(canvas);
+
+    engine.runRenderLoop(function() {
+      scene.render();
+    });
+    //添加之后在拖动窗口的时候不会导致画面失真
+    window.addEventListener('resize', function(){
+        engine.resize();
+    });
+		function createScene(engine) {
+      var scene = new BABYLON.Scene(engine);
+      var light = new BABYLON.HemisphericLight("dir01", new BABYLON.Vector3(0, 1, 0), scene);
+      light.position = new BABYLON.Vector3(50, 25, 10);
+      light.intensity = 0.6;
+
+      // 参数是 : name, alpha, beta, radius, target, scene
+      //置0的ArcRotateCamera旨在以一种奇怪的方式，直到setPosition()被调用
+			var camera = new BABYLON.ArcRotateCamera("Camera", 0, 0, 0, new BABYLON.Vector3(0, 2, 0), scene);
+      camera.setPosition(new BABYLON.Vector3(2, 5, -20));
+      // camera.attachControl(canvas, noPreventDefault, useCtrlForPanning);
+
+			scene.ambientColor = new BABYLON.Color3(.5, .5, .5);
+
+			// Ground
+			var ground = BABYLON.Mesh.CreateGround("ground", 100, 100, 1, scene, false);
+			var groundMaterial = new BABYLON.StandardMaterial("ground", scene);
+            // ground diffuseColor
+			groundMaterial.diffuseColor = new BABYLON.Color3(1, 1, 1);
+			groundMaterial.specularColor = new BABYLON.Color3(0, 0, 0);
+			ground.material = groundMaterial;
+
+      // woman
+      BABYLON.SceneLoader.ImportMesh("", "./data/", "Joan.babylon", scene, function (newMeshes, particleSystems, skeletons) {
+          woman = newMeshes[0];
+          woman.rotation = new BABYLON.Vector3(0, InitialRotateAngle, 0);
+          womanClones.push(woman);
+          woman.position = new BABYLON.Vector3(1, 0, 2);
+          woman.skeletons = [];
+          for (var i = 0; i < skeletons.length; i+=1){
+              woman.skeletons[i] = skeletons[i];
+              scene.beginAnimation(woman.skeletons[i], 360, 395, 1.0, true);
+          }
+           for(var i=0; i<womanActorNum-1; i++) {
+               womanClones.push(cloneWoman(woman));
+           }
+      });
+      // man
+      BABYLON.SceneLoader.ImportMesh("", "./data/", "Vincent.babylon", scene, function (newMeshes, particleSystems, skeletons) {
+          man = newMeshes[0];
+          man.rotation = new BABYLON.Vector3(0, InitialRotateAngle, 0);
+          manClones.push(man);
+          // man.position = new BABYLON.Vector3(0, 0, 0);
+          man.skeletons = [];
+          for (var i = 0; i < skeletons.length; i+=1){
+              man.skeletons[i] = skeletons[i];
+              scene.beginAnimation(man.skeletons[i], 362, 395, 1.0, true);
+          }
+           for(var i=0; i<manActorNum-1; i++) {
+               manClones.push(cloneMan(man));
+           }
+      });
+      // 克隆
+      function cloneMan(srcObj) {
+                //create clone..
+                var id = manClones.length;
+                var cloneObj = {};
+                cloneObj = srcObj.clone("clone_" + id);
+                cloneObj.skeletons = [];
+
+                for (var i = 0; i < srcObj.skeletons.length; i+=1) {
+                    cloneObj.skeletons[i] = srcObj.skeletons[i].clone("skeleton clone #"+i);
+                    scene.beginAnimation(cloneObj.skeletons[i], 362, 395, 1.0, true);
+                }
+                if (srcObj._children) {
+                    //dude is a parent mesh with multiple _children.
+                    for (var i = 0; i < srcObj._children.length; i += 1){
+                        if(cloneObj.skeletons.length > 1) //Mostlikely a seperate skeleton for each child mesh..
+                            cloneObj._children[i].skeleton = cloneObj.skeletons[i];
+                        else //Mostlikely a single skeleton for all child meshes.
+                            cloneObj._children[i].skeleton = cloneObj.skeletons[0];
+                    }
+                } else {
+                    //dude is a single mesh with no _children
+                    cloneObj.skeleton = cloneObj.skeletons[0];
+                }
+                cloneObj.position = new BABYLON.Vector3(4 - id, 0, 0);
+                cloneObj.rotation = new BABYLON.Vector3(0, InitialRotateAngle, 0);
+                return cloneObj;
+            }//Clone func
+      function cloneWoman(srcObj) {
+                //create clone..
+                var id = womanClones.length;
+                var cloneObj = {};
+                cloneObj = srcObj.clone("clone_" + id);
+                cloneObj.skeletons = [];
+
+                for (var i = 0; i < srcObj.skeletons.length; i+=1) {
+                    cloneObj.skeletons[i] = srcObj.skeletons[i].clone("skeleton clone #"+i);
+                    scene.beginAnimation(cloneObj.skeletons[i], 360, 395, 1.0, true);
+                }
+
+                if (srcObj._children) {
+                    //dude is a parent mesh with multiple _children.
+                    for (var i = 0; i < srcObj._children.length; i += 1){
+                        if(cloneObj.skeletons.length > 1) //Mostlikely a seperate skeleton for each child mesh..
+                            cloneObj._children[i].skeleton = cloneObj.skeletons[i];
+                        else //Mostlikely a single skeleton for all child meshes.
+                            cloneObj._children[i].skeleton = cloneObj.skeletons[0];
+                    }
+                } else {
+                    // a single mesh with no _children
+                    cloneObj.skeleton = cloneObj.skeletons[0];
+                }
+                cloneObj.position = new BABYLON.Vector3(4 - id, 0, 2);
+                cloneObj.rotation = new BABYLON.Vector3(0, InitialRotateAngle, 0);
+                return cloneObj;
+            }//Clone func
+
+			return scene;
+		};
+
+		// setInterval(function() {
+		//      fps.innerHTML = 'FPS:' + parseInt(engine.fps);
+		// }, 1500);
+
+
+    function getTime() {
+        var time = new Date();
+        return time.getMinutes() + ':' + time.getSeconds() + ':' + time.getMilliseconds();
+    }
+
+    var checkAllReadyTimer = setInterval(function() {
+        if((womanClones.length + manClones.length) == ActorNum) {
+            clearInterval(checkAllReadyTimer);
+            changePosTimer.start(5*60);
+            rotateTimer.start(5*60);
+            setTimeout(function() {
+                adjustRotateTimer.start(5*60);
+            }, 5000);
+        }
+    }, 400);
+
+    var indexOfChangePos = 0;//记录一共调整了多少次位置
+    var flagOfRotate = true;//旋转标志
+    var singlePos;
+    var currentIndexOfPos = 29; //从第几帧开始获取位置，因为在定时器开始之前，前面的位置都是空的
+    var changePosTimer = new Timer({
+        tick : TimeOfChangePos/1000,//set specific tick(e.g. set it to 2000, ontick handler will fire every 2000 seconds)
+        ontick : function (sec) { //what to do on every tick
+            console.log('changePosTimer tick:' + getTime());
+            if(currentIndexOfPos++ >= (countOfTotalFrame - 1)) {
+                currentIndexOfPos = 0;
+                changePosTimer.stop();
+            }
+            singlePos = allPos[currentIndexOfPos];
+            var manIndex = 0, womanIndex = 0;
+            for(var i=0; i<ActorNum; i++) {
+                if(i % 2 == 0) {
+                    manClones[manIndex++].position = new BABYLON.Vector3(singlePos[currentIndexOfPos*100][i+1].y /10 - 25,
+                                                            0,
+                                                            singlePos[currentIndexOfPos*100][i+1].x /10 - 25);
+                } else {
+                    womanClones[womanIndex++].position = new BABYLON.Vector3(singlePos[currentIndexOfPos*100][i+1].y /10 - 25,
+                                                            0,
+                                                            singlePos[currentIndexOfPos*100][i+1].x /10 - 25);
+                }
+
+            }
+        },
+        onstart : function(sec) { //start event handler
+            //console.log('changePosTimer onstart:' + getTime());
+        },
+        onstop: function() {
+            //console.log('changePosTimer onstop:' + getTime());
+        }
+    });
+
+    var indexOfRotate = 0;
+    var singleRotate;
+    var rotateTimer = new Timer({
+        tick : TimeOfChangeRotate/1000,//set specific tick(e.g. set it to 2000, ontick handler will fire every 2000 seconds)
+        ontick : function (sec) { //what to do on every tick
+            singleRotate = keyPosRotate[indexOfRotate++];
+            console.log(indexOfRotate + '--rotateTimer ontick:' + getTime() + ':' +singleRotate[indexOfRotate][1]);
+            if(indexOfRotate >= (countOfKeyFrame)) {
+                flagOfRotate = false;
+                rotateTimer.stop();
+                return;
+            }
+
+            var manIndex = 0, womanIndex = 0;
+            for(var i=0; i<ActorNum; i++) {
+                // clones[i].rotation = new BABYLON.Vector3(0, parseInt(singleRotate[indexOfRotate][i+1] + InitialRotateAngle), 0);
+                if(i % 2 == 0) {
+                    manClones[manIndex++].rotation.y += parseInt(singleRotate[indexOfRotate][i+1]);
+                } else {
+                    womanClones[womanIndex++].rotation.y += parseInt(singleRotate[indexOfRotate][i+1]);
+                }
+            }
+        },
+        onstart : function(sec) { //start event handler
+            singleRotate = keyPosRotate[indexOfRotate++];
+            console.log(indexOfRotate-1 + '--rotateTimer onstart:' + getTime() + ':' +singleRotate[indexOfRotate][1]);
+            var manIndex = 0, womanIndex = 0;
+            for(var i=0; i<ActorNum; i++) {
+                if(i % 2 == 0) {
+                    manClones[manIndex++].rotation.y += parseInt(singleRotate[indexOfRotate][i+1]);
+                } else {
+                    womanClones[womanIndex++].rotation.y += parseInt(singleRotate[indexOfRotate][i+1]);
+                }
+            }
+        },
+        onstop: function() {
+            //console.log(indexOfRotate + '--rotateTimer onstop:' + getTime());
+        }
+    });
+
+    var FlagOfAdjustRotate = false;
+    // 调整转向
+    var adjustRotateTimer = new Timer({
+        tick : TimeOfAdjustRotate/1000,//set specific tick(e.g. set it to 2000, ontick handler will fire every 2000 seconds)
+        ontick : function (sec) { //what to do on every tick
+            singleRotate = keyPosRotate[indexOfRotate-1];
+            console.log(indexOfRotate-1 + '--adjustRotateTimer ontick:' + getTime() + ':' + -singleRotate[indexOfRotate][1]);
+            if(indexOfRotate >= (countOfKeyFrame)) {
+                adjustRotateTimer.stop();
+                return;
+            }
+            // FlagOfAdjustRotate = true;
+            var manIndex = 0, womanIndex = 0;
+            for(var i=0; i<ActorNum; i++) {
+                // clones[i].rotation = new BABYLON.Vector3(0, -(parseInt(singleRotate[indexOfRotate][i+1]) + InitialRotateAngle), 0);
+                if(i % 2 == 0) {
+                    manClones[manIndex++].rotation.y += parseInt(singleRotate[indexOfRotate][i+1]);
+                } else {
+                    womanClones[womanIndex++].rotation.y += parseInt(singleRotate[indexOfRotate][i+1]);
+                }
+            }
+        },
+        onstart : function(sec) { //start event handler
+            singleRotate = keyPosRotate[indexOfRotate-1];
+            //console.log(indexOfRotate-1 +　'－－adjustRotateTimer onstart:' + getTime() + ':' + -singleRotate[indexOfRotate][1]);
+
+            var manIndex = 0, womanIndex = 0;
+            for(var i=0; i<ActorNum; i++) {
+                // clones[i].rotation = new BABYLON.Vector3(0, -(parseInt(singleRotate[indexOfRotate][i+1]) + InitialRotateAngle), 0);
+                if(i % 2 == 0) {
+                    manClones[manIndex++].rotation.y += parseInt(singleRotate[indexOfRotate][i+1]);
+                } else {
+                    womanClones[womanIndex++].rotation.y += parseInt(singleRotate[indexOfRotate][i+1]);
+                }
+            }
+        },
+        onstop: function() {
+            //console.log(indexOfRotate-1 + '--adjustRotateTimer onstop:' + getTime());
+        }
+    });
+
+	</script>
+</body>
+</html>

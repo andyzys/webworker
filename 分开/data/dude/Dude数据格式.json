@@ -1,0 +1,209 @@
+{
+    "activeCameraID": "4e3104bd-30d5-4890-b8ba-dcba00b659ec",
+    "ambientColor": [0, 0, 0],
+    "autoClear": true,
+    "cameras": [{
+		"applyGravity": false,
+		"checkCollisions": false,
+		"ellipsoid": null,
+		"fov": 0.8,
+		"id": "4e3104bd-30d5-4890-b8ba-dcba00b659ec",
+		"inertia": 0.9,
+		"maxZ": 383.8826,
+		"minZ": 0.1,
+		"name": "Default camera",
+		"position": [57.70456,
+		109.7632,
+		18.4708862],
+		"rotation": [0, 0, 0],
+		"speed": 1.919413,
+		"target": [-0.306108475, 35.32137, 1.04846144]
+	}],
+    "clearColor": [0.2, 0.2, 0.3],
+    "fogColor": null,
+	"fogDensity": 0,
+	"fogEnd": 0,
+	"fogMode": 0,
+	"fogStart": 0,
+    "gravity": [0, 0, -0.9],
+    "lights": [{
+        "diffuse": [1, 1, 1],
+        "direction": null,
+        "id": "fa24aca1-3241-480a-bec6-816693df7325",
+        "intensity": 1,
+        "name": "Default light",
+        "position": [57.70456, 109.7632, 18.4708862],
+        "specular": [1, 1, 1],
+        "type": 0
+    }],
+    "materials": [
+        {
+            "alpha": 1,
+    		"ambient": [1, 1, 1],
+    		"ambientTexture": null,
+    		"backFaceCulling": true,
+    		"bumpTexture": null,
+    		"diffuse": [1, 1, 1],
+    		"diffuseTexture": {
+    			"animations": null,
+    			"coordinatesIndex": 0,
+    			"coordinatesMode": 0,
+    			"hasAlpha": false,
+    			"isCube": false,
+    			"isRenderTarget": false,
+    			"level": 1,
+    			"mirrorPlane": null,
+    			"name": "0.jpg",
+    			"renderList": null,
+    			"renderTargetSize": 0,
+    			"uAng": 0,
+    			"uOffset": 0,
+    			"uScale": 1,
+    			"vAng": 0,
+    			"vOffset": 0,
+    			"vScale": 1,
+    			"wAng": 0,
+    			"wrapU": 1,
+    			"wrapV": 1
+    		},
+    		"emissive": [0, 0, 0],
+    		"emissiveTexture": null,
+    		"id": "937221a0-303c-431f-9f47-ffa3735eaaba",
+    		"name": "38839134",
+    		"opacityTexture": null,
+    		"reflectionTexture": null,
+    		"specular": [0.5, 0.5, 0.5],
+    		"specularPower": 1.24573088,
+    		"specularTexture": null
+    	},
+        {
+            "一共有五个对象书": 5
+        }
+    ],
+    "meshes": [
+        {
+            "animations": null,
+    		"autoAnimate": false,
+    		"autoAnimateFrom": 0,
+    		"autoAnimateLoop": false,
+    		"autoAnimateTo": 0,
+    		"billboardMode": 0,
+    		"checkCollisions": false,
+    		"colors": null,
+    		"id": "a00a0a5c-c7f1-4706-ada8-8f9c0a6a4a46",
+    		"indices": null,
+    		"isEnabled": true,
+    		"isVisible": false,
+    		"localMatrix": null,
+    		"materialId": "",
+    		"matricesIndices": null,
+    		"matricesWeights": null,
+    		"name": "him",
+    		"normals": null,
+    		"parentId": "",
+            "position": [0, 0, 0],
+    		"positions": null,
+    		"receiveShadows": false,
+            "rotation": [0, 0, 0],
+    		"scaling": [1, 1, 1],
+    		"skeletonId": -1,
+    		"subMeshes": null,
+    		"uvs": null,
+    		"uvs2": null,
+    		"visibility": 1
+        },
+        {
+            "animations": null,
+    		"autoAnimate": false,
+    		"autoAnimateFrom": 0,
+    		"autoAnimateLoop": false,
+    		"autoAnimateTo": 0,
+    		"billboardMode": 0,
+    		"checkCollisions": false,
+    		"colors": null,
+    		"id": "0ef21059-94ce-4e79-ad67-48d8c05607e0",
+            "indices": ["很多很多数据"],
+            "isEnabled": true,
+    		"isVisible": true,
+    		"localMatrix": null,
+    		"materialId": "937221a0-303c-431f-9f47-ffa3735eaaba",
+            "matricesIndices": ["很多很多数据"],
+            "matricesWeights": ["很多很多数据"],
+            "name": " \/ 0",
+            "normals": ["很多很多数据"],
+            "parentId": "a00a0a5c-c7f1-4706-ada8-8f9c0a6a4a46(注意这个id是上一个mesh的id)",
+            "position": [0, 0, 0],
+            "positions": ["很多很多数据"],
+            "receiveShadows": false,
+            "rotation": [0, 0, 0],
+    		"scaling": [1, 1, 1],
+    		"skeletonId": 0,
+    		"subMeshes": null,
+            "uvs": ["很多很多数据"],
+            "uvs2": null,
+    		"visibility": 1
+        },
+        {
+            "后面还有四个类似上面的对象": 4
+        }
+    ],
+    "multiMaterials": [],
+	"particleSystems": null,
+	"shadowGenerators": [],
+    "skeletons": [
+        {
+            "id": 0,
+		    "name": "Skeleton0",
+            "bones": [
+                {
+                    "animation": {
+        				"dataType": 3,
+        				"framePerSecond": 60,
+                        "keys": [
+                            {
+                                "frame": 0,
+            					"values": [1.33158051E-06, 2.08440987E-10, 1, 0, 1, -4.16883819E-11, -1.33158051E-06, 0,4.16881044E-11,1,-2.08440945E-10,0,0.037563432,37.4609871,2.23054862,1]
+                            },
+                            {
+                                "frame": 1.315438,
+                                "values": [1.33158051E-06, 2.08440987E-10, 1, 0, 1, -4.16883819E-11, -1.33158051E-06, 0,4.16881044E-11,1,-2.08440945E-10,0,0.037563432,37.4609871,2.23054862,1]
+                            },
+                            {
+                                "以此类推": 2
+                            },
+                            {
+                                "frame": 98.65825,
+                                "values": [1.33158051E-06, 2.08440987E-10, 1, 0, 1, -4.16883819E-11, -1.33158051E-06, 0,4.16881044E-11,1,-2.08440945E-10,0,0.037563432,37.4609871,2.23054862,1]
+                            }
+                        ],
+                        "loopBehavior": 1,
+        				"name": "bone0Animation",
+        				"property": "_matrix"
+                    },
+                    "index": 0,
+                    "matrix": [1.33158051E-06, 2.08440987E-10, 1, 0, 1, -4.16883819E-11, -1.33158051E-06, 0,4.16881044E-11,1,-2.08440945E-10,0,0.037563432,37.4609871,2.23054862,1],
+        			"name": "bone0",
+        			"parentBoneIndex": -1
+                },
+                {
+                    "animation": {
+                        "dataType": 3,
+                        "framePerSecond": 60,
+                        "keys": [],
+                        "loopBehavior": 1,
+        				"name": "bone0Animation",
+        				"property": "_matrix"
+                    },
+                    "index": 0,
+                    "matrix": [1.33158051E-06, 2.08440987E-10, 1, 0, 1, -4.16883819E-11, -1.33158051E-06, 0,4.16881044E-11,1,-2.08440945E-10,0,0.037563432,37.4609871,2.23054862,1],
+        			"name": "bone1",
+        			"parentBoneIndex": 0
+                },
+                {
+                    "以此类推后面有很多骨骼": 10
+                }
+
+            ]
+        }
+    ],
+}

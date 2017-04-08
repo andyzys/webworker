@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>webworker</title>
+  </head>
+  <body>
+    <button onclick="startTimer()">开始</button>
+    <button onclick="endTimer()">结束</button>
+    <script id='updateWorker'>
+      function getTime() {
+          var time = new Date();
+          return time.getMinutes() + ':' + time.getSeconds() + ':' + time.getMilliseconds();
+      }
+      self.addEventListener('message', function(e) {
+        var cmd = e.data.cmd;
+        switch(cmd) {
+          case 'change':
+            changePos();
+            break;
+          case 'rotate':
+            rotate();
+            break;
+          case 'adjust':
+            adjust();
+            break;
+        }
+      });
+      function changePos() {
+        console.log('changePos-', getTime());
+      }
+      function rotate() {
+        console.log('rotate   -', getTime());
+      }
+      function adjust() {
+        console.log('adjust   -', getTime());
+      }
+    </script>
+    <script id='timerWorker'>
+      function getTime() {
+          var time = new Date();
+          return time.getMinutes() + ':' + time.getSeconds() + ':' + time.getMilliseconds();
+      }
+      var timer = null;
+      const DeltaTime = 50;
+      function startTimer() {
+        var index = 0;
+        timer = setInterval(function() {
+          index++;
+          var str;
+          if(index % 2 == 0 && index % 100 != 0) {
+            str = getTime();
+            var obj = {
+              'cmd': '100ms',
+              'desc': str
+            };
+            self.postMessage(obj);
+          }
+          if(index % 100 == 0) {
+            str = getTime();
+            var obj = {
+              'cmd': '5000ms',
+              'desc': str
+            };
+            self.postMessage(obj);
+          }
+        }, DeltaTime);
+      }
+      function endTimer() {
+        clearInterval(timer);
+        self.postMessage({
+          'cmd': '定时器已经停止！'
+        })
+      }
+      self.addEventListener('message', function(e) {
+        var data = e.data;
+        if(data.cmd == 'START') {
+          startTimer();
+        }
+        if(data.cmd == 'END') {
+          endTimer();
+        }
+      });
+    </script>
+    <script>
+      // 定时worker
+      var timerWorkerBlob = new Blob([document.getElementById('timerWorker').textContent]);
+      var timerWorker = new Worker(window.URL.createObjectURL(timerWorkerBlob));
+      // 刷新worker
+      var updateBlob = new Blob([document.getElementById('updateWorker').textContent]);
+      var updateWorker = new Worker(window.URL.createObjectURL(updateBlob));
+
+      timerWorker.addEventListener('message', function(e) {
+        var cmd = e.data.cmd;
+        switch (cmd) {
+          case '100ms':
+            updateWorker.postMessage({
+              'cmd': 'change'
+            });
+            break;
+          case '5000ms':
+            updateWorker.postMessage({
+              'cmd': 'rotate'
+            });
+            break;
+          default:
+            console.log(cmd);
+            break;
+        }
+      });
+
+      function startTimer() {
+        timerWorker.postMessage({
+          'cmd': 'START'
+        });
+      }
+      function endTimer() {
+        timerWorker.postMessage({
+          'cmd': 'END'
+        });
+      }
+    </script>
+  </body>
+</html>

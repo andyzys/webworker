@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>webworker</title>
+    <script src="./lib/babylon.js"></script>
+    <script src="./lib/zepto.js"></script>
+    <script src="./lib/timer.js"></script>
+
+    <style>
+  		html, body {
+  			width: 100%;
+  			height: 100%;
+  			padding: 0;
+  			margin: 0;
+  			overflow: hidden;
+  		}
+
+  		#renderCanvas {
+  			width: 100%;
+  			height: 100%;
+  		}
+
+  		#infos {
+  			position: absolute;
+  			right: calc(50% - 150px);
+  			top: 1px;
+  			height: 110px;
+  			width: 300px;
+  			border: 1px solid black;
+  			color: white;
+  			background: rgba(0, 0, 0, 0.5);
+  			font-family: "Segoe WP", Arial;
+  			font-size: 40px;
+  			text-align: center;
+  		}
+
+  		#simd {
+  			position: absolute;
+  			right: 215px;
+  			top: 120px;
+  			color: white;
+  			font-family: "Segoe WP", Arial;
+  		}
+	  </style>
+
+  </head>
+  <body>
+    <canvas id="renderCanvas"></canvas>
+	  <div id="infos"></div>
+    
+    <button onclick="startTimer()">开始</button>
+    <button onclick="endTimer()">结束</button>
+
+    <script>
+      // 定时worker
+      var timerWorker = new Worker('timerWorker.js');
+      // 刷新worker
+      var updateWorker = new Worker('updateWorker.js');
+
+      timerWorker.addEventListener('message', function(e) {
+        var cmd = e.data.cmd;
+        switch (cmd) {
+          case '100ms':
+            updateWorker.postMessage({
+              'cmd': 'change'
+            });
+            break;
+          case '5000ms':
+            updateWorker.postMessage({
+              'cmd': 'rotate'
+            });
+            break;
+          default:
+            console.log(cmd);
+            break;
+        }
+      });
+
+      function startTimer() {
+        timerWorker.postMessage({
+          'cmd': 'START'
+        });
+      }
+      function endTimer() {
+        timerWorker.postMessage({
+          'cmd': 'END'
+        });
+      }
+    </script>
+  </body>
+</html>
